@@ -2,142 +2,49 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Frame — Image studio</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f6fa">
+  <title>FRAME — 画像デザインスタジオ</title>
   <style>
-    :root {
-      --bg: #f4f5f7;
-      --panel: rgba(255,255,255,.92);
-      --ink: #202124;
-      --muted: #8b8f98;
-      --line: #e8e9ed;
-      --accent: #635bff;
-      --accent-soft: #efeeff;
-      --shadow: 0 18px 50px rgba(22, 25, 35, .08);
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    button, input { font: inherit; }
-    button { border: 0; cursor: pointer; color: inherit; }
-    .app { min-height: 100vh; display: grid; grid-template-columns: 232px 1fr 280px; grid-template-rows: 66px 1fr; }
-    .topbar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 750; letter-spacing: -.03em; font-size: 19px; }
-    .brand-mark { width: 28px; height: 28px; border-radius: 9px; background: linear-gradient(135deg, #8c7cff, #5147dd); position: relative; box-shadow: 0 6px 15px #635bff44; }
-    .brand-mark:after { content: ""; position: absolute; width: 10px; height: 10px; border: 2px solid white; border-radius: 4px; left: 7px; top: 7px; }
-    .top-actions { display: flex; align-items: center; gap: 10px; }
-    .project-name { color: var(--muted); font-size: 13px; margin-right: 12px; }
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 9px; background: white; border: 1px solid var(--line); font-weight: 650; }
-    .button:hover { border-color: #cbcbd4; background: #fafafd; }
-    .button.primary { color: white; border-color: var(--accent); background: var(--accent); box-shadow: 0 6px 14px #635bff2e; }
-    .button.primary:hover { background: #554df1; }
-    .sidebar { background: #fff; border-right: 1px solid var(--line); padding: 22px 14px; }
-    .side-label, .section-label { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-    .side-label { padding: 0 11px 10px; }
-    .tool { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px; margin: 2px 0; border-radius: 9px; background: transparent; text-align: left; color: #636772; }
-    .tool svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .tool.active, .tool:hover { color: var(--accent); background: var(--accent-soft); }
-    .divider { height: 1px; background: var(--line); margin: 20px 10px; }
-    .history { display: grid; gap: 10px; padding: 10px; }
-    .thumb { height: 52px; border-radius: 8px; background: linear-gradient(140deg,#f9c6b6,#9e83d9 55%,#2d305b); position: relative; overflow: hidden; }
-    .thumb:nth-child(2) { background: linear-gradient(140deg,#f6e1c2,#f39f8b 48%,#5c698d); }
-    .thumb:nth-child(3) { background: linear-gradient(140deg,#c7e3dc,#557b84 48%,#222b3c); }
-    .thumb span { position: absolute; bottom: 6px; left: 8px; color: #fff; font-size: 10px; text-shadow: 0 1px 4px #0008; }
-    .workspace { min-width: 0; display: flex; flex-direction: column; }
-    .canvasbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 25px; }
-    .canvasbar .section-label { margin-right: 12px; }
-    .canvas-controls { display: flex; align-items: center; gap: 4px; color: var(--muted); }
-    .icon-button { width: 32px; height: 32px; display: grid; place-items: center; background: transparent; border-radius: 7px; color: #767983; }
-    .icon-button:hover { background: white; color: var(--ink); }
-    .icon-button svg { width: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .zoom { min-width: 54px; text-align: center; font-size: 12px; font-weight: 700; }
-    .stage-wrap { flex: 1; display: grid; place-items: center; padding: 18px 30px 42px; }
-    .stage { width: min(650px, 76vw); aspect-ratio: 4 / 3; position: relative; display: grid; place-items: center; background-image: linear-gradient(45deg,#e9e9ed 25%,transparent 25%), linear-gradient(-45deg,#e9e9ed 25%,transparent 25%), linear-gradient(45deg,transparent 75%,#e9e9ed 75%), linear-gradient(-45deg,transparent 75%,#e9e9ed 75%); background-size: 24px 24px; background-position: 0 0,0 12px,12px -12px,-12px 0; box-shadow: var(--shadow); overflow: hidden; }
-    canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
-    .empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; pointer-events: none; }
-    .empty-card { width: 270px; padding: 24px; border: 1px dashed #cfd0d8; border-radius: 14px; background: rgba(255,255,255,.84); }
-    .empty-icon { margin: 0 auto 12px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; color: var(--accent); background: var(--accent-soft); }
-    .empty h2 { margin: 0 0 4px; font-size: 15px; }
-    .empty p { margin: 0; color: var(--muted); font-size: 12px; }
-    .drop-active .empty-card { border-color: var(--accent); box-shadow: 0 0 0 5px #635bff18; }
-    .properties { background: #fff; border-left: 1px solid var(--line); padding: 23px 20px; overflow: auto; }
-    .properties h2 { margin: 0 0 22px; font-size: 16px; letter-spacing: -.02em; }
-    .property-section { padding: 0 0 22px; margin-bottom: 22px; border-bottom: 1px solid var(--line); }
-    .property-section:last-child { border-bottom: 0; }
-    .section-label { display: block; margin-bottom: 13px; }
-    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
-    .row label { color: #666a73; font-size: 12px; }
-    input[type="range"] { width: 122px; accent-color: var(--accent); }
-    .value { min-width: 34px; text-align: right; color: #444750; font-variant-numeric: tabular-nums; font-size: 12px; }
-    .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .filter { padding: 5px; border-radius: 8px; background: #fafafa; border: 1px solid var(--line); font-size: 10px; color: #777b84; }
-    .filter-preview { height: 40px; border-radius: 5px; margin-bottom: 4px; background: linear-gradient(135deg,#efb8ae,#7d71b8); }
-    .filter:nth-child(2) .filter-preview { filter: grayscale(1); }
-    .filter:nth-child(3) .filter-preview { filter: sepia(1); }
-    .filter:nth-child(4) .filter-preview { filter: saturate(1.8); }
-    .filter:nth-child(5) .filter-preview { filter: contrast(1.4); }
-    .filter:nth-child(6) .filter-preview { filter: brightness(1.2); }
-    .filter.selected { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-    .format { display: flex; gap: 8px; }
-    .format button { flex: 1; height: 38px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); font-weight: 700; font-size: 12px; }
-    .format button.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-    .upload-input { display: none; }
-    @media (max-width: 900px) { .app { grid-template-columns: 72px 1fr; } .sidebar { padding: 18px 10px; } .tool { justify-content: center; } .tool span, .side-label, .history, .divider { display: none; } .properties { display: none; } .project-name { display: none; } }
-    @media (max-width: 560px) { .app { grid-template-columns: 1fr; grid-template-rows: 60px 1fr; } .sidebar { display: none; } .topbar { padding: 0 14px; } .stage-wrap { padding: 15px; } .stage { width: 100%; } .button.primary { padding: 0 10px; } .canvasbar { padding: 10px 15px; } }
+    :root{--bg:#f5f6fa;--paper:#fff;--ink:#20222a;--sub:#858995;--line:#e8e9ef;--purple:#665cf2;--soft:#f0efff;--shadow:0 24px 70px #22253c12}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
+    button,input{font:inherit}button{cursor:pointer;border:0;color:inherit;-webkit-tap-highlight-color:transparent}
+    .app{min-height:100dvh;display:grid;grid-template-columns:250px minmax(0,1fr) 310px;grid-template-rows:68px}
+    header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 26px;background:#fffffff0;border-bottom:1px solid var(--line);backdrop-filter:blur(18px);z-index:2}
+    .brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;letter-spacing:-.06em}.mark{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,#9188ff,#5249db);box-shadow:0 7px 16px #665cf244;position:relative}.mark:before{content:"";position:absolute;inset:8px;border:2px solid #fff;border-radius:4px}.mark:after{content:"";position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;left:12px;top:12px}
+    .header-actions,.file-actions{display:flex;align-items:center;gap:9px}.saved{font-size:12px;color:var(--sub);margin-right:12px}.btn{height:38px;padding:0 15px;border:1px solid var(--line);border-radius:10px;background:#fff;font-weight:700;white-space:nowrap}.btn:hover{border-color:#c9cad4}.btn.primary{background:var(--purple);border-color:var(--purple);color:#fff;box-shadow:0 8px 18px #665cf233}
+    .sidebar{background:#fff;border-right:1px solid var(--line);padding:25px 14px}.eyebrow{font-size:10px;color:var(--sub);letter-spacing:.14em;font-weight:800;margin:0 11px 10px}.tool{width:100%;display:flex;align-items:center;gap:13px;padding:12px 11px;margin:2px 0;background:transparent;border-radius:9px;text-align:left;color:#626672}.tool:hover,.tool.active{color:var(--purple);background:var(--soft)}.tool svg,.icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.rule{height:1px;background:var(--line);margin:22px 10px}.recent{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:8px}.recent figure{height:65px;border-radius:9px;margin:0;overflow:hidden;position:relative;background:linear-gradient(140deg,#f7c3b4,#947ad3 55%,#292d5b)}.recent figure:nth-child(2){background:linear-gradient(140deg,#fae7c9,#ee987e 52%,#5b6e92)}.recent figure:nth-child(3){background:linear-gradient(140deg,#cce7df,#507985 52%,#253047)}.recent figure:nth-child(4){background:linear-gradient(140deg,#f6d0df,#af73ae 50%,#40386d)}.recent figcaption{position:absolute;left:7px;bottom:5px;color:#fff;font-size:9px;text-shadow:0 1px 5px #0008}
+    main{min-width:0;display:flex;flex-direction:column}.canvas-head{height:62px;padding:0 28px;display:flex;align-items:center;justify-content:space-between}.canvas-title{font-weight:750}.canvas-title small{font-weight:500;color:var(--sub);margin-left:10px}.zoom-bar{display:flex;align-items:center;color:var(--sub)}.icon{width:36px;height:36px;display:grid;place-items:center;background:transparent;border-radius:9px}.icon:hover{background:#fff;color:var(--ink)}.zoom{width:57px;text-align:center;font-size:12px;font-weight:700;color:#555966}
+    .stage-area{flex:1;display:grid;place-items:center;padding:18px 30px 48px;overflow:auto}.stage{width:min(780px,84vw);aspect-ratio:4/3;position:relative;display:grid;place-items:center;overflow:hidden;background-image:linear-gradient(45deg,#e7e8ed 25%,transparent 25%),linear-gradient(-45deg,#e7e8ed 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e7e8ed 75%),linear-gradient(-45deg,transparent 75%,#e7e8ed 75%);background-size:26px 26px;background-position:0 0,0 13px,13px -13px,-13px 0;box-shadow:var(--shadow);transition:transform .2s;touch-action:none}.stage canvas{display:block;width:100%;height:100%;object-fit:contain}.drop{position:absolute;inset:18px;border:2px dashed transparent;border-radius:10px;pointer-events:none}.stage.dragging .drop{border-color:var(--purple);background:#665cf20b}.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center}.empty-card{width:290px;padding:27px 20px;border:1px dashed #c9cbd4;border-radius:16px;background:#fffffff2;pointer-events:auto}.empty-card .add{display:inline-flex;align-items:center;gap:7px;margin-top:16px;height:35px;padding:0 13px;border:1px solid #dcdde5;border-radius:8px;background:#fff;color:var(--purple);font-weight:750}.empty-icon{width:44px;height:44px;display:grid;place-items:center;margin:0 auto 12px;border-radius:13px;color:var(--purple);background:var(--soft)}.empty h2{font-size:16px;margin:0 0 4px}.empty p{font-size:12px;color:var(--sub);margin:0}
+    .panel{background:#fff;border-left:1px solid var(--line);padding:25px 20px;overflow:auto}.panel h1{font-size:17px;margin:0 0 23px;letter-spacing:-.03em}.section{padding-bottom:22px;margin-bottom:22px;border-bottom:1px solid var(--line)}.section:last-child{border:0}.section>h2{font-size:11px;color:var(--sub);letter-spacing:.12em;margin:0 0 13px}.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.filter{padding:5px;border:1px solid var(--line);border-radius:9px;background:#fafafa;color:#777b85;font-size:10px}.filter:hover,.filter.selected{color:var(--purple);border-color:var(--purple);box-shadow:0 0 0 2px var(--soft)}.preview{height:43px;border-radius:5px;margin-bottom:5px;background:linear-gradient(135deg,#f0baac,#7a70ba)}.filters .filter:nth-child(2) .preview{filter:grayscale(1)}.filters .filter:nth-child(3) .preview{filter:sepia(.75)}.filters .filter:nth-child(4) .preview{filter:saturate(1.8)}.filters .filter:nth-child(5) .preview{filter:contrast(1.45)}.filters .filter:nth-child(6) .preview{filter:brightness(1.2)}
+    .slider-row{display:grid;grid-template-columns:72px 1fr 40px;gap:9px;align-items:center;margin:14px 0}.slider-row label{font-size:12px;color:#666a75}input[type=range]{width:100%;accent-color:var(--purple)}output{text-align:right;color:#4e5260;font-size:12px;font-variant-numeric:tabular-nums}.ratio{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.ratio button{height:35px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--sub);font-size:11px;font-weight:700}.ratio button.active{border-color:var(--purple);color:var(--purple);background:var(--soft)}.format{display:flex;gap:8px}.format button{flex:1;height:38px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--sub);font-weight:750}.format button.active{border-color:var(--purple);background:var(--soft);color:var(--purple)}
+    .file{display:none}.mobile-tools{display:none}
+    @media(max-width:1050px){.app{grid-template-columns:76px minmax(0,1fr);grid-template-rows:62px}.sidebar{padding:20px 10px}.tool{justify-content:center}.tool span,.eyebrow,.rule,.recent{display:none}.panel{display:none}.saved{display:none}.stage{width:min(780px,86vw)}}
+    @media(max-width:640px){header{padding:0 14px}.app{grid-template-rows:58px 1fr}.brand{font-size:18px}.header-actions{gap:6px}.header-actions .btn:first-of-type{display:none}.btn{height:35px;padding:0 10px;font-size:12px}.sidebar{display:none}.canvas-head{height:52px;padding:0 14px}.stage-area{padding:10px 12px 92px;align-items:start}.stage{width:100%;margin-top:8px;aspect-ratio:1/1;max-height:calc(100dvh - 190px)}.mobile-tools{position:fixed;display:flex;z-index:5;bottom:0;left:0;right:0;height:70px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;background:#fffffff2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.mobile-tools button,.mobile-tools label{display:grid;place-items:center;gap:2px;background:transparent;color:#686c77;font-size:10px}.mobile-tools label{color:var(--purple)}.mobile-tools svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.empty-card{width:245px;padding:22px 14px}.empty-card h2{font-size:14px}}
   </style>
 </head>
 <body>
   <div class="app">
-    <header class="topbar">
-      <div class="brand"><span class="brand-mark"></span>frame</div>
-      <div class="top-actions"><span class="project-name">untitled canvas</span><button class="button" id="reset">Reset</button><button class="button primary" id="download">Export image <span>↗</span></button></div>
-    </header>
-    <aside class="sidebar">
-      <div class="side-label">Create</div>
-      <label class="tool active" for="file-input"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-4.5-4.5L8 19"/></svg><span>Add image</span></label>
-      <input id="file-input" class="upload-input" type="file" accept="image/*">
-      <button class="tool" id="rotate"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.7-3.9L3 10"/><path d="M3 5v5h5"/><path d="M4 13a8 8 0 0 0 14.7 3.9L21 14"/><path d="M21 19v-5h-5"/></svg><span>Rotate</span></button>
-      <button class="tool" id="flip"><svg viewBox="0 0 24 24"><path d="M12 4v16M5 7h5v10H5zM14 7h5v10h-5z"/></svg><span>Flip image</span></button>
-      <div class="divider"></div>
-      <div class="side-label">Recent</div>
-      <div class="history"><div class="thumb"><span>soft sunset</span></div><div class="thumb"><span>coastal light</span></div><div class="thumb"><span>deep blue</span></div></div>
-    </aside>
-    <main class="workspace">
-      <div class="canvasbar"><div><span class="section-label" style="display:inline">Canvas</span><span class="project-name">4 : 3</span></div><div class="canvas-controls"><button class="icon-button" id="zoom-out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="zoom" id="zoom-value">100%</span><button class="icon-button" id="zoom-in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
-      <div class="stage-wrap"><div class="stage" id="stage"><canvas id="canvas" width="1200" height="900"></canvas><div class="empty" id="empty"><div class="empty-card"><div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5 8.5 12l3 3 4-5 4.5 6.5"/><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1"/></svg></div><h2>Drop an image here</h2><p>or choose Add image to start creating</p></div></div></div></div>
-    </main>
-    <aside class="properties">
-      <h2>Adjust image</h2>
-      <section class="property-section"><span class="section-label">Filters</span><div class="filter-grid"><button class="filter selected" data-filter="none"><div class="filter-preview"></div>Original</button><button class="filter" data-filter="grayscale(1)"><div class="filter-preview"></div>B&amp;W</button><button class="filter" data-filter="sepia(.75)"><div class="filter-preview"></div>Warm</button><button class="filter" data-filter="saturate(1.8)"><div class="filter-preview"></div>Vivid</button><button class="filter" data-filter="contrast(1.45)"><div class="filter-preview"></div>Contrast</button><button class="filter" data-filter="brightness(1.2)"><div class="filter-preview"></div>Light</button></div></section>
-      <section class="property-section"><span class="section-label">Fine tune</span><div class="row"><label for="brightness">Brightness</label><input id="brightness" type="range" min="50" max="150" value="100"><span class="value" id="brightness-value">100%</span></div><div class="row"><label for="contrast">Contrast</label><input id="contrast" type="range" min="50" max="150" value="100"><span class="value" id="contrast-value">100%</span></div><div class="row"><label for="saturation">Saturation</label><input id="saturation" type="range" min="0" max="200" value="100"><span class="value" id="saturation-value">100%</span></div></section>
-      <section class="property-section"><span class="section-label">Export format</span><div class="format"><button class="active" data-format="png">PNG</button><button data-format="jpeg">JPG</button></div></section>
-    </aside>
+    <header><div class="brand"><i class="mark"></i>frame</div><div class="header-actions"><span class="saved">自動保存済み</span><button class="btn" id="reset">リセット</button><button class="btn primary" id="download">書き出す&nbsp;↗</button></div></header>
+    <aside class="sidebar"><p class="eyebrow">編集</p><label class="tool active" for="file-input"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-4.5-4.5L8 19"/></svg><span>画像を追加</span></label><input id="file-input" class="file" type="file" accept="image/*"><button class="tool" id="rotate"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.7-3.9L3 10"/><path d="M3 5v5h5"/><path d="M4 13a8 8 0 0 0 14.7 3.9L21 14"/><path d="M21 19v-5h-5"/></svg><span>回転</span></button><button class="tool" id="flip"><svg viewBox="0 0 24 24"><path d="M12 4v16M5 7h5v10H5zM14 7h5v10h-5z"/></svg><span>反転</span></button><button class="tool" id="grayscale"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v16"/></svg><span>モノクロ</span></button><div class="rule"></div><p class="eyebrow">最近使った画像</p><div class="recent"><figure><figcaption>sunset</figcaption></figure><figure><figcaption>coastal</figcaption></figure><figure><figcaption>deep blue</figcaption></figure><figure><figcaption>portrait</figcaption></figure></div></aside>
+    <main><div class="canvas-head"><div class="canvas-title">キャンバス <small>4 : 3</small></div><div class="zoom-bar"><button class="icon" id="zoom-out" aria-label="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><span class="zoom" id="zoom-label">100%</span><button class="icon" id="zoom-in" aria-label="拡大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div></div><div class="stage-area"><div class="stage" id="stage"><canvas id="canvas" width="1200" height="900"></canvas><div class="drop"></div><div class="empty" id="empty"><div class="empty-card"><div class="empty-icon"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 16.5 8.5 12l3 3 4-5 4.5 6.5"/><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1"/></svg></div><h2>画像をここにドロップ</h2><p>またはデバイスから画像を選択してください</p><label class="add" for="file-input">＋ 画像を選択</label></div></div></div></div></main>
+    <aside class="panel"><h1>画像を調整</h1><section class="section"><h2>フィルター</h2><div class="filters"><button class="filter selected" data-filter="none"><div class="preview"></div>オリジナル</button><button class="filter" data-filter="grayscale(1)"><div class="preview"></div>モノクロ</button><button class="filter" data-filter="sepia(.75)"><div class="preview"></div>ウォーム</button><button class="filter" data-filter="saturate(1.8)"><div class="preview"></div>ビビッド</button><button class="filter" data-filter="contrast(1.45)"><div class="preview"></div>コントラスト</button><button class="filter" data-filter="brightness(1.2)"><div class="preview"></div>ライト</button></div></section><section class="section"><h2>微調整</h2><div class="slider-row"><label>明るさ</label><input id="brightness" type="range" min="50" max="150" value="100"><output id="brightness-out">100%</output></div><div class="slider-row"><label>コントラスト</label><input id="contrast" type="range" min="50" max="150" value="100"><output id="contrast-out">100%</output></div><div class="slider-row"><label>彩度</label><input id="saturation" type="range" min="0" max="200" value="100"><output id="saturation-out">100%</output></div></section><section class="section"><h2>キャンバス比率</h2><div class="ratio"><button class="active" data-ratio="4/3">4 : 3</button><button data-ratio="1/1">1 : 1</button><button data-ratio="16/9">16 : 9</button><button data-ratio="9/16">9 : 16</button></div></section><section class="section"><h2>保存形式</h2><div class="format"><button class="active" data-format="png">PNG</button><button data-format="jpeg">JPG</button></div></section></aside>
   </div>
+  <nav class="mobile-tools"><label for="file-input"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>追加</span></label><button id="mobile-rotate"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.7-3.9L3 10"/><path d="M3 5v5h5"/></svg><span>回転</span></button><button id="mobile-adjust"><svg viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span>調整</span></button><button id="mobile-download"><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></svg><span>保存</span></button></nav>
   <script>
-    const canvas = document.querySelector("#canvas"), ctx = canvas.getContext("2d"), stage = document.querySelector("#stage"), empty = document.querySelector("#empty");
-    let image = null, rotation = 0, flipped = false, zoom = 100, filter = "none", format = "png";
-    const controls = { brightness: 100, contrast: 100, saturation: 100 };
-    function render() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!image) return;
-      ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(rotation * Math.PI / 180); ctx.scale(flipped ? -1 : 1, 1);
-      const ratio = Math.max(canvas.width / image.width, canvas.height / image.height);
-      ctx.filter = `${filter} brightness(${controls.brightness}%) contrast(${controls.contrast}%) saturate(${controls.saturation}%)`;
-      ctx.drawImage(image, -image.width * ratio / 2, -image.height * ratio / 2, image.width * ratio, image.height * ratio); ctx.restore();
-    }
-    function loadImage(source) { const reader = new FileReader(); reader.onload = () => { image = new Image(); image.onload = () => { empty.style.display = "none"; render(); }; image.src = reader.result; }; reader.readAsDataURL(source); }
-    document.querySelector("#file-input").addEventListener("change", e => e.target.files[0] && loadImage(e.target.files[0]));
-    stage.addEventListener("dragover", e => { e.preventDefault(); stage.classList.add("drop-active"); });
-    stage.addEventListener("dragleave", () => stage.classList.remove("drop-active"));
-    stage.addEventListener("drop", e => { e.preventDefault(); stage.classList.remove("drop-active"); if (e.dataTransfer.files[0]?.type.startsWith("image/")) loadImage(e.dataTransfer.files[0]); });
-    document.querySelector("#rotate").addEventListener("click", () => { rotation = (rotation + 90) % 360; render(); });
-    document.querySelector("#flip").addEventListener("click", () => { flipped = !flipped; render(); });
-    document.querySelectorAll(".filter").forEach(button => button.addEventListener("click", () => { document.querySelector(".filter.selected").classList.remove("selected"); button.classList.add("selected"); filter = button.dataset.filter; render(); }));
-    ["brightness", "contrast", "saturation"].forEach(name => { const input = document.querySelector(`#${name}`), value = document.querySelector(`#${name}-value`); input.addEventListener("input", () => { controls[name] = input.value; value.textContent = `${input.value}%`; render(); }); });
-    document.querySelectorAll("[data-format]").forEach(button => button.addEventListener("click", () => { document.querySelector(".format .active").classList.remove("active"); button.classList.add("active"); format = button.dataset.format; }));
-    document.querySelector("#zoom-in").addEventListener("click", () => { zoom = Math.min(150, zoom + 10); document.querySelector("#zoom-value").textContent = `${zoom}%`; stage.style.transform = `scale(${zoom / 100})`; });
-    document.querySelector("#zoom-out").addEventListener("click", () => { zoom = Math.max(70, zoom - 10); document.querySelector("#zoom-value").textContent = `${zoom}%`; stage.style.transform = `scale(${zoom / 100})`; });
-    document.querySelector("#reset").addEventListener("click", () => { image = null; rotation = 0; flipped = false; filter = "none"; Object.assign(controls, { brightness: 100, contrast: 100, saturation: 100 }); ["brightness", "contrast", "saturation"].forEach(name => { document.querySelector(`#${name}`).value = 100; document.querySelector(`#${name}-value`).textContent = "100%"; }); document.querySelector(".filter.selected").classList.remove("selected"); document.querySelector('[data-filter="none"]').classList.add("selected"); empty.style.display = "grid"; render(); });
-    document.querySelector("#download").addEventListener("click", () => { if (!image) { document.querySelector("#file-input").click(); return; } const link = document.createElement("a"); link.download = `frame-export.${format}`; link.href = canvas.toDataURL(format === "jpeg" ? "image/jpeg" : "image/png", .92); link.click(); });
+    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),canvas=$("#canvas"),ctx=canvas.getContext("2d"),stage=$("#stage"),empty=$("#empty");let image=null,rotation=0,flipped=false,zoom=100,chosenFilter="none",format="png";const values={brightness:100,contrast:100,saturation:100};
+    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);if(!image)return;ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rotation*Math.PI/180);ctx.scale(flipped?-1:1,1);const scale=Math.max(canvas.width/image.width,canvas.height/image.height);ctx.filter=`${chosenFilter} brightness(${values.brightness}%) contrast(${values.contrast}%) saturate(${values.saturation}%)`;ctx.drawImage(image,-image.width*scale/2,-image.height*scale/2,image.width*scale,image.height*scale);ctx.restore()}
+    function load(file){if(!file||!file.type.startsWith("image/"))return;const reader=new FileReader();reader.onload=()=>{image=new Image();image.onload=()=>{empty.style.display="none";draw()};image.src=reader.result};reader.readAsDataURL(file)}
+    $("#file-input").addEventListener("change",e=>load(e.target.files[0]));["dragover","dragenter"].forEach(e=>stage.addEventListener(e,x=>{x.preventDefault();stage.classList.add("dragging")}));["dragleave","drop"].forEach(e=>stage.addEventListener(e,x=>{x.preventDefault();stage.classList.remove("dragging")}));stage.addEventListener("drop",e=>load(e.dataTransfer.files[0]));
+    const rotate=()=>{rotation=(rotation+90)%360;draw()};$("#rotate").addEventListener("click",rotate);$("#mobile-rotate").addEventListener("click",rotate);$("#flip").addEventListener("click",()=>{flipped=!flipped;draw()});$("#grayscale").addEventListener("click",()=>{$('[data-filter="grayscale(1)"]').click()});
+    $$(".filter").forEach(b=>b.addEventListener("click",()=>{$(".filter.selected").classList.remove("selected");b.classList.add("selected");chosenFilter=b.dataset.filter;draw()}));
+    ["brightness","contrast","saturation"].forEach(k=>{const input=$("#"+k),out=$("#"+k+"-out");input.addEventListener("input",()=>{values[k]=input.value;out.textContent=`${input.value}%`;draw()})});
+    $$(".ratio button").forEach(b=>b.addEventListener("click",()=>{$(".ratio .active").classList.remove("active");b.classList.add("active");const r=b.dataset.ratio;stage.style.aspectRatio=r;canvas.width=r==="1/1"?1000:r==="16/9"?1600:r==="9/16"?900:1200;canvas.height=r==="1/1"?1000:r==="16/9"?900:r==="9/16"?1600:900;draw()}));
+    $$(".format button").forEach(b=>b.addEventListener("click",()=>{$(".format .active").classList.remove("active");b.classList.add("active");format=b.dataset.format}));
+    function setZoom(next){zoom=Math.max(70,Math.min(150,next));$("#zoom-label").textContent=`${zoom}%`;stage.style.transform=`scale(${zoom/100})`}$("#zoom-in").addEventListener("click",()=>setZoom(zoom+10));$("#zoom-out").addEventListener("click",()=>setZoom(zoom-10));
+    function exportImage(){if(!image){$("#file-input").click();return}const a=document.createElement("a");a.download=`frame-${Date.now()}.${format}`;a.href=canvas.toDataURL(format==="jpeg"?"image/jpeg":"image/png",.92);a.click()}$("#download").addEventListener("click",exportImage);$("#mobile-download").addEventListener("click",exportImage);$("#mobile-adjust").addEventListener("click",()=>alert("画面を横向きにすると、詳細な調整パネルを表示できます。"));
+    $("#reset").addEventListener("click",()=>{image=null;rotation=0;flipped=false;chosenFilter="none";Object.assign(values,{brightness:100,contrast:100,saturation:100});["brightness","contrast","saturation"].forEach(k=>{$("#"+k).value=100;$("#"+k+"-out").textContent="100%"});$(".filter.selected").classList.remove("selected");$('[data-filter="none"]').classList.add("selected");empty.style.display="grid";draw()});
+    let startDistance=0,startZoom=zoom;stage.addEventListener("touchstart",e=>{if(e.touches.length===2){startDistance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);startZoom=zoom}},{passive:true});stage.addEventListener("touchmove",e=>{if(e.touches.length===2){e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);setZoom(startZoom+(d-startDistance)/3)}},{passive:false});
   </script>
 </body>
 </html>
