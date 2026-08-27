@@ -174,13 +174,43 @@ function exportImage() {
 function renderTemplates() {
   const list = state.templates.length ? state.templates : builtInTemplates.map(item => ({ id: item[0], title: item[1], name: item[2], description: item[3] }));
   const grid = $(".template-grid");
-  grid.innerHTML = list.map(template => `<button class="template-card" data-template="${template.id}"><div class="template-preview" style="${template.image ? `background-image:url('${template.image}')` : ""}"><span>${template.title || ""}</span></div><div class="template-info"><strong>${template.name || template.id}</strong><small>${template.description || "画像テンプレート"}</small></div></button>`).join("");
+  grid.replaceChildren();
+  list.forEach(template => {
+    const button = document.createElement("button");
+    button.className = "template-card";
+    button.dataset.template = String(template.id || "");
+
+    const preview = document.createElement("div");
+    preview.className = "template-preview";
+    if (typeof template.image === "string" && template.image.startsWith("templates/")) {
+      const image = document.createElement("img");
+      image.src = template.image;
+      image.alt = "";
+      preview.prepend(image);
+    }
+    const title = document.createElement("span");
+    String(template.title || "").split(/<br\s*\/?>/i).forEach((part, index, parts) => {
+      if (index) title.append(document.createElement("br"));
+      title.append(document.createTextNode(part));
+    });
+    preview.append(title);
+
+    const info = document.createElement("div");
+    info.className = "template-info";
+    const name = document.createElement("strong");
+    name.textContent = String(template.name || template.id || "");
+    const description = document.createElement("small");
+    description.textContent = String(template.description || "画像テンプレート");
+    info.append(name, description);
+    button.append(preview, info);
+    grid.append(button);
+  });
   $$(".template-card", grid).forEach(button => button.addEventListener("click", () => {
     state.template = button.dataset.template;
     const selected = list.find(item => item.id === state.template);
     empty.style.display = "none";
     $("#template-modal").classList.remove("open");
-    if (selected?.image) {
+    if (selected?.image?.startsWith("templates/")) {
       const image = new Image();
       image.onload = () => { state.templateImage = image; draw(); };
       image.onerror = () => { state.templateImage = null; draw(); };
@@ -262,6 +292,7 @@ $("#grayscale").addEventListener("click", () => $('[data-filter="grayscale(1)"]'
 $("#quick-adjust").addEventListener("click", () => $(".panel").scrollIntoView({ behavior: "smooth" }));
 $("#download").addEventListener("click", exportImage);
 $("#mobile-download").addEventListener("click", exportImage);
+$("#mobile-adjust").addEventListener("click", () => $(".panel").scrollIntoView({ behavior: "smooth" }));
 $("#reset").addEventListener("click", () => {
   state.image = null; state.template = null; state.templateImage = null; state.textLayers = []; state.selectedTextId = null;
   state.rotation = 0; state.flipped = false; state.filter = "none";
