@@ -21,6 +21,8 @@ const state = {
 };
 
 const builtInTemplates = window.frameTemplates || [];
+const recentImagesKey = "frame-recent-images";
+const recentImageLimit = 6;
 const templateColors = {
   sunset: ["#f49c78", "#252c68"], travel: ["#142b4a", "#f2c07d"],
   beauty: ["#f4d6c8", "#6d4e9b"], nature: ["#e8f2ee", "#305b62"],
@@ -128,12 +130,71 @@ function load(file) {
   if (!file || !(type.startsWith("image/") || /\.(heic|heif|webp|png|jpe?g|gif)$/i.test(name))) return;
   const reader = new FileReader();
   reader.onload = () => {
+    const source = String(reader.result);
     const image = new Image();
-    image.onload = () => { state.image = image; empty.style.display = "none"; draw(); };
+    image.onload = () => {
+      state.image = image;
+      state.template = null;
+      state.templateImage = null;
+      empty.style.display = "none";
+      saveRecentImage({ name: file.name, source });
+      draw();
+    };
     image.onerror = () => alert("この画像形式はブラウザで読み込めません。JPEGまたはWebPに変換してお試しください。");
-    image.src = reader.result;
+    image.src = source;
   };
   reader.readAsDataURL(file);
+}
+
+function getRecentImages() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(recentImagesKey) || "[]");
+    return Array.isArray(stored) ? stored.filter(item => item && typeof item.source === "string") : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveRecentImage(image) {
+  try {
+    const recent = getRecentImages().filter(item => item.source !== image.source);
+    recent.unshift({ id: `recent-${Date.now()}`, name: image.name, source: image.source });
+    localStorage.setItem(recentImagesKey, JSON.stringify(recent.slice(0, recentImageLimit)));
+  } catch (error) {
+    return;
+  }
+  renderRecentImages();
+}
+
+function useRecentImage(item) {
+  const image = new Image();
+  image.onload = () => {
+    state.image = null;
+    state.template = item.id;
+    state.templateImage = image;
+    empty.style.display = "none";
+    draw();
+  };
+  image.src = item.source;
+}
+
+function renderRecentImages() {
+  const container = $("#recent-images");
+  container.replaceChildren();
+  getRecentImages().forEach(item => {
+    const button = document.createElement("button");
+    button.className = "recent-image";
+    button.type = "button";
+    button.title = `${item.name || "画像"}をテンプレートとして使用`;
+    const image = document.createElement("img");
+    image.src = item.source;
+    image.alt = item.name || "最近使った画像";
+    const label = document.createElement("span");
+    label.textContent = item.name || "画像";
+    button.append(image, label);
+    button.addEventListener("click", () => useRecentImage(item));
+    container.append(button);
+  });
 }
 
 function drawTextOnCanvas() {
@@ -310,5 +371,6 @@ stage.addEventListener("touchmove", event => {
   if (event.touches.length === 2) { event.preventDefault(); const distance = Math.hypot(event.touches[0].clientX - event.touches[1].clientX, event.touches[0].clientY - event.touches[1].clientY); setZoom(startZoom + (distance - startDistance) / 3); }
 }, { passive: false });
 state.templates = builtInTemplates;
+renderRecentImages();
 renderTemplates();
 draw();

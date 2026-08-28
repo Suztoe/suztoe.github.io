@@ -1,3 +1,12 @@
+.sidebar{padding-top:18px;padding-bottom:18px}
+.tool{padding-top:10px;padding-bottom:10px}
+.rule{margin-top:16px;margin-bottom:16px}
+.stage-area{padding-top:12px;padding-bottom:24px}
+.quick-actions{padding-bottom:6px}
+.panel{padding-top:18px;padding-bottom:18px}
+.panel h1{margin-bottom:18px}
+.section{padding-bottom:17px;margin-bottom:17px}
+.recent-image{display:block;width:100%}
 :root{--bg:#f5f6fa;--paper:#fff;--ink:#20222a;--sub:#858995;--line:#e8e9ef;--purple:#665cf2;--soft:#f0efff;--shadow:0 24px 70px #22253c12}
     *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
     button,input{font:inherit}button{cursor:pointer;border:0;color:inherit;-webkit-tap-highlight-color:transparent}
