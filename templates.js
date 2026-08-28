@@ -1,5 +1,5 @@
 window.frameTemplates = [
-  { id: "sunset", title: "GOOD<br>VIBES", name: "サンセットポスター", description: "イベント / ポスター" },
+  { id: "sunset", title: "GOOD<br>VIBES", name: "サンセットポスター", description: "イベント / ポスター", image: "templates/sunset.svg" },
   { id: "travel", title: "TRAVEL<br>NOTES", name: "トラベルノート", description: "旅行 / ストーリー" },
   { id: "beauty", title: "NEW<br>MOOD", name: "ビューティーカバー", description: "美容 / SNS投稿" },
   { id: "nature", title: "GO<br>OUTSIDE", name: "ネイチャー", description: "ライフスタイル" },
