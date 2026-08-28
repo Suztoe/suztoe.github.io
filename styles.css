@@ -23,3 +23,29 @@
     @media(max-width:1050px){.app{grid-template-columns:76px minmax(0,1fr);grid-template-rows:62px}.sidebar{padding:20px 10px}.tool{justify-content:center}.tool span,.eyebrow,.rule,.recent{display:none}.panel{display:none}.saved{display:none}.stage{width:min(780px,86vw)}}
     @media(max-width:640px){header{padding:0 14px}.app{grid-template-rows:58px 1fr}.brand{font-size:18px}.header-actions{gap:6px}.header-actions .btn:first-of-type{display:none}.btn{height:35px;padding:0 10px;font-size:12px}.sidebar{display:none}.canvas-head{height:52px;padding:0 14px}.quick-actions{display:none}.stage-area{padding:10px 12px 92px;align-items:start}.stage{width:100%;margin-top:8px;aspect-ratio:1/1;max-height:calc(100dvh - 190px)}.mobile-tools{position:fixed;display:flex;z-index:5;bottom:0;left:0;right:0;height:70px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;background:#fffffff2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.mobile-tools button,.mobile-tools label{display:grid;place-items:center;gap:2px;background:transparent;color:#686c77;font-size:10px}.mobile-tools label{color:var(--purple)}.mobile-tools svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.empty-card{width:245px;padding:22px 14px}.empty-card h2{font-size:14px}}
     @media(max-width:640px){.modal{padding:12px}.modal-card{padding:18px;border-radius:16px}.template-grid{grid-template-columns:repeat(2,1fr);gap:8px}.template-preview{height:92px}.template-preview span{left:12px;bottom:14px;font-size:13px}.template-info{padding:9px}.template-info strong{font-size:11px}}
+
+    @media(min-width:1051px){
+      .app{grid-template-columns:minmax(220px,18vw) minmax(0,1fr) minmax(280px,22vw);grid-template-rows:clamp(60px,5vw,72px)}
+      header{padding-inline:clamp(18px,2.2vw,36px)}
+      .sidebar{padding:clamp(18px,1.6vw,25px) clamp(12px,1.2vw,20px)}
+      .tool{padding-inline:clamp(9px,1vw,14px)}
+      main{min-height:0}
+      .canvas-head{height:clamp(54px,4.5vw,68px);padding-inline:clamp(16px,2.2vw,36px)}
+      .quick-actions{padding-inline:clamp(16px,2.2vw,36px)}
+      .stage-area{min-height:0;padding:clamp(12px,1.8vw,24px) clamp(16px,2.2vw,36px) clamp(24px,3vw,42px)}
+      .stage{width:min(100%,clamp(560px,52vw,1040px))}
+      .panel{padding-inline:clamp(16px,1.5vw,24px)}
+    }
+
+    @media(min-width:1051px) and (max-width:1240px){
+      .app{grid-template-columns:220px minmax(0,1fr) 280px}
+      .stage{width:min(100%,52vw)}
+      .quick-actions button,.quick-actions .quick-action{padding-inline:8px}
+    }
+
+    @media(min-width:641px) and (max-width:1050px){
+      .app{min-height:100dvh}
+      main{min-height:0}
+      .stage-area{min-height:0}
+      .stage{max-width:100%;max-height:calc(100dvh - 142px)}
+    }
