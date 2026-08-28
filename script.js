@@ -20,14 +20,7 @@ const state = {
   templates: []
 };
 
-const builtInTemplates = [
-  ["sunset", "GOOD<br>VIBES", "サンセットポスター", "イベント / ポスター"],
-  ["travel", "TRAVEL<br>NOTES", "トラベルノート", "旅行 / ストーリー"],
-  ["beauty", "NEW<br>MOOD", "ビューティーカバー", "美容 / SNS投稿"],
-  ["nature", "GO<br>OUTSIDE", "ネイチャー", "ライフスタイル"],
-  ["night", "AFTER<br>DARK", "ナイトイベント", "音楽 / イベント"],
-  ["sale", "SALE<br>DAY", "セールバナー", "ショップ / 告知"]
-];
+const builtInTemplates = window.frameTemplates || [];
 const templateColors = {
   sunset: ["#f49c78", "#252c68"], travel: ["#142b4a", "#f2c07d"],
   beauty: ["#f4d6c8", "#6d4e9b"], nature: ["#e8f2ee", "#305b62"],
@@ -63,7 +56,7 @@ function draw() {
 
 function renderTextLayers() {
   $$(".text-layer").forEach(node => node.remove());
-  const scale = canvas.clientWidth / canvas.width;
+  const scale = Math.max(0.1, canvas.clientWidth / canvas.width);
   state.textLayers.forEach(layer => {
     const node = document.createElement("div");
     node.className = `text-layer${layer.id === state.selectedTextId ? " selected" : ""}`;
@@ -71,7 +64,7 @@ function renderTextLayers() {
     node.textContent = layer.text;
     node.style.left = `${layer.x / canvas.width * 100}%`;
     node.style.top = `${layer.y / canvas.height * 100}%`;
-    node.style.fontSize = `${layer.size * scale}px`;
+    node.style.fontSize = `${Math.max(12, layer.size * scale)}px`;
     node.style.color = layer.color;
     node.addEventListener("pointerdown", startTextDrag);
     node.addEventListener("click", () => selectText(layer.id));
@@ -222,16 +215,6 @@ function renderTemplates() {
   }));
 }
 
-async function loadTemplates() {
-  try {
-    const response = await fetch("templates/manifest.json", { cache: "no-store" });
-    if (response.ok) state.templates = await response.json();
-  } catch (error) {
-    state.templates = [];
-  }
-  renderTemplates();
-}
-
 $("#file-input").addEventListener("change", event => load(event.target.files[0]));
 ["dragover", "dragenter"].forEach(type => stage.addEventListener(type, event => { event.preventDefault(); stage.classList.add("dragging"); }));
 ["dragleave", "drop"].forEach(type => stage.addEventListener(type, event => { event.preventDefault(); stage.classList.remove("dragging"); }));
@@ -326,5 +309,6 @@ stage.addEventListener("touchstart", event => {
 stage.addEventListener("touchmove", event => {
   if (event.touches.length === 2) { event.preventDefault(); const distance = Math.hypot(event.touches[0].clientX - event.touches[1].clientX, event.touches[0].clientY - event.touches[1].clientY); setZoom(startZoom + (distance - startDistance) / 3); }
 }, { passive: false });
-loadTemplates();
+state.templates = builtInTemplates;
+renderTemplates();
 draw();
