@@ -49,3 +49,7 @@
       .stage-area{min-height:0}
       .stage{max-width:100%;max-height:calc(100dvh - 142px)}
     }
+
+    .header-actions .icon{font-size:22px;line-height:1;color:var(--sub)}
+    .header-actions .icon:disabled{cursor:not-allowed;opacity:.35}
+    @media(max-width:640px){.header-actions .icon{display:none}}

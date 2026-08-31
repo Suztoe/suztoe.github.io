@@ -23,11 +23,91 @@ const state = {
 const builtInTemplates = window.frameTemplates || [];
 const recentImagesKey = "frame-recent-images";
 const recentImageLimit = 6;
+const historyLimit = 30;
+const historyPast = [];
+const historyFuture = [];
+let restoringHistory = false;
 const templateColors = {
   sunset: ["#f49c78", "#252c68"], travel: ["#142b4a", "#f2c07d"],
   beauty: ["#f4d6c8", "#6d4e9b"], nature: ["#e8f2ee", "#305b62"],
   night: ["#252735", "#d2a4c5"], sale: ["#f8e9be", "#df6b5a"]
 };
+
+function snapshot() {
+  return {
+    image: state.image,
+    template: state.template,
+    templateImage: state.templateImage,
+    rotation: state.rotation,
+    flipped: state.flipped,
+    zoom: state.zoom,
+    filter: state.filter,
+    format: state.format,
+    values: { ...state.values },
+    textLayers: state.textLayers.map(layer => ({ ...layer })),
+    selectedTextId: state.selectedTextId,
+    width: canvas.width,
+    height: canvas.height,
+    aspectRatio: stage.style.aspectRatio
+  };
+}
+
+function updateHistoryButtons() {
+  $("#undo").disabled = historyPast.length === 0;
+  $("#redo").disabled = historyFuture.length === 0;
+}
+
+function pushHistory() {
+  if (restoringHistory) return;
+  historyPast.push(snapshot());
+  if (historyPast.length > historyLimit) historyPast.shift();
+  historyFuture.length = 0;
+  updateHistoryButtons();
+}
+
+function restore(snapshotToRestore) {
+  restoringHistory = true;
+  Object.assign(state, {
+    image: snapshotToRestore.image,
+    template: snapshotToRestore.template,
+    templateImage: snapshotToRestore.templateImage,
+    rotation: snapshotToRestore.rotation,
+    flipped: snapshotToRestore.flipped,
+    zoom: snapshotToRestore.zoom,
+    filter: snapshotToRestore.filter,
+    format: snapshotToRestore.format,
+    values: { ...snapshotToRestore.values },
+    textLayers: snapshotToRestore.textLayers.map(layer => ({ ...layer })),
+    selectedTextId: snapshotToRestore.selectedTextId
+  });
+  canvas.width = snapshotToRestore.width;
+  canvas.height = snapshotToRestore.height;
+  stage.style.aspectRatio = snapshotToRestore.aspectRatio;
+  $("#zoom-label").textContent = `${state.zoom}%`;
+  ["brightness", "contrast", "saturation"].forEach(key => {
+    $(`#${key}`).value = state.values[key];
+    $(`#${key}-out`).textContent = `${state.values[key]}%`;
+  });
+  $(".filter.selected")?.classList.remove("selected");
+  $(`[data-filter="${state.filter}"]`)?.classList.add("selected");
+  selectText(state.selectedTextId);
+  draw();
+  restoringHistory = false;
+}
+
+function undo() {
+  if (!historyPast.length) return;
+  historyFuture.push(snapshot());
+  restore(historyPast.pop());
+  updateHistoryButtons();
+}
+
+function redo() {
+  if (!historyFuture.length) return;
+  historyPast.push(snapshot());
+  restore(historyFuture.pop());
+  updateHistoryButtons();
+}
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -88,6 +168,7 @@ function selectText(id) {
 function addText() {
   const input = $("#text-input");
   const text = input.value.trim() || "テキスト";
+  pushHistory();
   const layer = {
     id: `${Date.now()}-${Math.random()}`,
     text,
@@ -107,6 +188,7 @@ function startTextDrag(event) {
   event.preventDefault();
   const layer = state.textLayers.find(item => item.id === event.currentTarget.dataset.id);
   if (!layer) return;
+  pushHistory();
   selectText(layer.id);
   const rect = canvas.getBoundingClientRect();
   const offsetX = event.clientX - (rect.left + layer.x / canvas.width * rect.width);
@@ -133,6 +215,7 @@ function load(file) {
     const source = String(reader.result);
     const image = new Image();
     image.onload = () => {
+      pushHistory();
       state.image = image;
       state.template = null;
       state.templateImage = null;
@@ -169,6 +252,7 @@ function saveRecentImage(image) {
 function useRecentImage(item) {
   const image = new Image();
   image.onload = () => {
+    pushHistory();
     state.image = null;
     state.template = item.id;
     state.templateImage = image;
@@ -206,7 +290,10 @@ function drawTextOnCanvas() {
     ctx.fillStyle = layer.color;
     ctx.shadowColor = "#0006";
     ctx.shadowBlur = 4;
-    ctx.fillText(layer.text, layer.x, layer.y);
+    const lines = layer.text.split(/\r?\n/);
+    const lineHeight = layer.size * 1.15;
+    const startY = layer.y - (lines.length - 1) * lineHeight / 2;
+    lines.forEach((line, index) => ctx.fillText(line, layer.x, startY + index * lineHeight));
   });
   ctx.restore();
 }
@@ -260,6 +347,7 @@ function renderTemplates() {
     grid.append(button);
   });
   $$(".template-card", grid).forEach(button => button.addEventListener("click", () => {
+    pushHistory();
     state.template = button.dataset.template;
     const selected = list.find(item => item.id === state.template);
     empty.style.display = "none";
@@ -276,7 +364,10 @@ function renderTemplates() {
   }));
 }
 
-$("#file-input").addEventListener("change", event => load(event.target.files[0]));
+$("#file-input").addEventListener("change", event => {
+  load(event.target.files[0]);
+  event.target.value = "";
+});
 ["dragover", "dragenter"].forEach(type => stage.addEventListener(type, event => { event.preventDefault(); stage.classList.add("dragging"); }));
 ["dragleave", "drop"].forEach(type => stage.addEventListener(type, event => { event.preventDefault(); stage.classList.remove("dragging"); }));
 stage.addEventListener("drop", event => load(event.dataTransfer.files[0]));
@@ -285,23 +376,24 @@ $("#quick-text").addEventListener("click", addText);
 $("#mobile-text").addEventListener("click", addText);
 $("#text-input").addEventListener("input", event => {
   const layer = state.textLayers.find(item => item.id === state.selectedTextId);
-  if (layer) { layer.text = event.target.value; draw(); }
+  if (layer) { pushHistory(); layer.text = event.target.value; draw(); }
 });
 $("#text-size").addEventListener("input", event => {
   const layer = state.textLayers.find(item => item.id === state.selectedTextId);
   $("#text-size-out").textContent = `${event.target.value}px`;
-  if (layer) { layer.size = Number(event.target.value); draw(); }
+  if (layer) { pushHistory(); layer.size = Number(event.target.value); draw(); }
 });
 $("#text-color").addEventListener("input", event => {
   const layer = state.textLayers.find(item => item.id === state.selectedTextId);
-  if (layer) { layer.color = event.target.value; draw(); }
+  if (layer) { pushHistory(); layer.color = event.target.value; draw(); }
 });
 $("#delete-text").addEventListener("click", () => {
   const index = state.textLayers.findIndex(item => item.id === state.selectedTextId);
-  if (index >= 0) { state.textLayers.splice(index, 1); state.selectedTextId = null; selectText(null); draw(); }
+  if (index >= 0) { pushHistory(); state.textLayers.splice(index, 1); state.selectedTextId = null; selectText(null); draw(); }
 });
 $("#file-input").accept = "image/*,.heic,.heif";
 $$(".filter").forEach(button => button.addEventListener("click", () => {
+  pushHistory();
   $(".filter.selected").classList.remove("selected");
   button.classList.add("selected");
   state.filter = button.dataset.filter;
@@ -309,9 +401,10 @@ $$(".filter").forEach(button => button.addEventListener("click", () => {
 }));
 ["brightness", "contrast", "saturation"].forEach(key => {
   const input = $(`#${key}`);
-  input.addEventListener("input", () => { state.values[key] = input.value; $(`#${key}-out`).textContent = `${input.value}%`; draw(); });
+  input.addEventListener("input", () => { pushHistory(); state.values[key] = input.value; $(`#${key}-out`).textContent = `${input.value}%`; draw(); });
 });
 $$(".ratio button").forEach(button => button.addEventListener("click", () => {
+  pushHistory();
   $(".ratio .active").classList.remove("active");
   button.classList.add("active");
   const ratio = button.dataset.ratio;
@@ -321,15 +414,16 @@ $$(".ratio button").forEach(button => button.addEventListener("click", () => {
   draw();
 }));
 $$(".format button").forEach(button => button.addEventListener("click", () => {
+  pushHistory();
   $(".format .active").classList.remove("active");
   button.classList.add("active");
   state.format = button.dataset.format;
 }));
-const rotate = () => { state.rotation = (state.rotation + 90) % 360; draw(); };
+const rotate = () => { pushHistory(); state.rotation = (state.rotation + 90) % 360; draw(); };
 $("#rotate").addEventListener("click", rotate);
 $("#mobile-rotate").addEventListener("click", rotate);
 $("#quick-rotate").addEventListener("click", rotate);
-const flip = () => { state.flipped = !state.flipped; draw(); };
+const flip = () => { pushHistory(); state.flipped = !state.flipped; draw(); };
 $("#flip").addEventListener("click", flip);
 $("#quick-flip").addEventListener("click", flip);
 $("#grayscale").addEventListener("click", () => $('[data-filter="grayscale(1)"]').click());
@@ -338,14 +432,36 @@ $("#download").addEventListener("click", exportImage);
 $("#mobile-download").addEventListener("click", exportImage);
 $("#mobile-adjust").addEventListener("click", () => $(".panel").scrollIntoView({ behavior: "smooth" }));
 $("#reset").addEventListener("click", () => {
+  pushHistory();
   state.image = null; state.template = null; state.templateImage = null; state.textLayers = []; state.selectedTextId = null;
-  state.rotation = 0; state.flipped = false; state.filter = "none";
+  state.rotation = 0; state.flipped = false; state.filter = "none"; state.zoom = 100;
   Object.assign(state.values, { brightness: 100, contrast: 100, saturation: 100 });
+  canvas.width = 1200; canvas.height = 900; stage.style.aspectRatio = "4/3";
+  $("#zoom-label").textContent = "100%"; stage.style.transform = "scale(1)";
+  $(".ratio .active")?.classList.remove("active"); $('[data-ratio="4/3"]').classList.add("active");
+  state.format = "png";
+  $(".format .active")?.classList.remove("active"); $('[data-format="png"]').classList.add("active");
   ["brightness", "contrast", "saturation"].forEach(key => { $(`#${key}`).value = 100; $(`#${key}-out`).textContent = "100%"; });
   $(".filter.selected").classList.remove("selected"); $('[data-filter="none"]').classList.add("selected");
   $("#text-input").value = ""; $("#delete-text").disabled = true; empty.style.display = "grid"; draw();
 });
 function setZoom(next) { state.zoom = Math.round(Math.max(70, Math.min(150, next))); $("#zoom-label").textContent = `${state.zoom}%`; stage.style.transform = `scale(${state.zoom / 100})`; }
+$("#undo").addEventListener("click", undo);
+$("#redo").addEventListener("click", redo);
+document.addEventListener("keydown", event => {
+  const modifier = event.ctrlKey || event.metaKey;
+  if (modifier && event.key.toLowerCase() === "z") {
+    event.preventDefault();
+    event.shiftKey ? redo() : undo();
+  } else if (modifier && event.key.toLowerCase() === "y") {
+    event.preventDefault();
+    redo();
+  } else if (event.key === "Escape") {
+    selectText(null);
+  } else if (event.key === "Delete" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+    $("#delete-text").click();
+  }
+});
 $("#zoom-in").addEventListener("click", () => setZoom(state.zoom + 10));
 $("#zoom-out").addEventListener("click", () => setZoom(state.zoom - 10));
 const templateButton = document.createElement("button");
@@ -374,3 +490,4 @@ state.templates = builtInTemplates;
 renderRecentImages();
 renderTemplates();
 draw();
+updateHistoryButtons();
